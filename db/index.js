@@ -436,7 +436,7 @@ db.once('open', (err, conn) => {
   // seed collections
   // importDataForReviews();
   // importDataForReviewsPhotos();
-  importDataForProducts();
+  // importDataForProducts();
   // importDataForCharacteristics();
   // importDataForCharacteristicsValue_Fit();
   // importDataForCharacteristicsValue_Length();
