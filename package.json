@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "nodemon -w server.js",
+    "seed": "node db/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -20,7 +21,7 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
-    "csv-parser": "^3.0.0",
+    "csv-parse": "^4.15.3",
     "csv-writer": "^1.6.0",
     "data-forge": "^1.8.17",
     "dataframe-js": "^1.4.4",
