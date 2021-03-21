@@ -4,12 +4,12 @@ const fs = require('fs');
 const path = require('path');
 
 const reviews_photos = new mongoose.Schema({
-  _id: Number,
+  id: {type: Number, index: {unique: true}},
   url: String
-});
+}, {_id: false});
 
 const reviews_schema = new mongoose.Schema({
-  _id: Number,
+  review_id: {type: Number, index: {unique: true}},
   product_id: {type: Number, index: true},
   rating: Number,
   date: String,
@@ -88,7 +88,7 @@ db.once('open', (err, conn) => {
         // console.log('line:', line)
         // console.log('type', typeof row[6])
         var reviewObj = new Reviews({
-          _id: row[0],
+          review_id: row[0],
           product_id: row[1],
           rating: row[2],
           date: JSON.parse(row[3]),
@@ -111,13 +111,13 @@ db.once('open', (err, conn) => {
           stream.pause(); //lets stop reading from file until we finish writing this batch to db
 
           bulk.execute(function(err,result) {
-              if (err) throw err;   // or do something
-              // possibly do something with result
-              batch++;
-              console.log(`${batch * 1000} review entries finished, continuing...`)
-              bulk = Reviews.collection.initializeOrderedBulkOp();
+            if (err) throw err;   // or do something
+            // possibly do something with result
+            batch++;
+            console.log(`${batch * 1000} review entries finished, continuing...`);
+            bulk = Reviews.collection.initializeOrderedBulkOp();
 
-              stream.resume(); //continue to read from file
+            stream.resume(); //continue to read from file
           });
         }
       });
@@ -125,9 +125,11 @@ db.once('open', (err, conn) => {
       stream.on("end",function() {
         if ( counter % 1000 != 0 ) {
             bulk.execute(function(err,result) {
-                if (err) throw err;   // or something
-                // maybe look at result
-                console.log(`seeding done for ${counter} entries of reviews!`)
+              if (err) throw err;   // or something
+              // maybe look at result
+              console.log(`seeding done for ${counter} entries of reviews!`);
+              // chain seeding function for photos to embed into reviews when done
+              importDataForReviewsPhotos();
             });
         }
       });
@@ -172,11 +174,11 @@ db.once('open', (err, conn) => {
     stream.on("line",function(line) {
       var row = line.split(",");     // split the lines on delimiter
       var obj = new Reviews_photos({
-        _id: row[0],
+        id: row[0],
         url: JSON.parse(row[2])
       });
 
-      bulk.find( { _id: Number(row[1]) } ).upsert().update( { $push: { photos: obj } })
+      bulk.find( { review_id: Number(row[1]) } ).upsert().update( { $push: { photos: obj } })
 
       counter++;
 
@@ -198,13 +200,11 @@ db.once('open', (err, conn) => {
     stream.on("end",function() {
       console.log('less than 1000 review photo entries to go...')
       if ( counter % 1000 != 0 ) {
-          bulk.execute(function(err,result) {
-            if (err) throw err;   // or something
-            // maybe look at result
-            console.log(`seeding done for embedding ${counter} photos entries!`);
-            // chain seeding function for photos to embed into reviews when done
-            importDataForReviewsPhotos();
-          });
+        bulk.execute(function(err,result) {
+          if (err) throw err;   // or something
+          // maybe look at result
+          console.log(`seeding done for embedding ${counter} photos entries!`);
+        });
       }
     });
   };

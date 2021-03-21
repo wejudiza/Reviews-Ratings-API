@@ -24,7 +24,7 @@ server.listen(PORT, () => {
 mongoose.connect('mongodb://localhost/reviews_ratings', {useNewUrlParser: true, useUnifiedTopology: true});
 
 const reviews_schema = new mongoose.Schema({
-  _id: Number,
+  review_id: {type: Number, index: {unique: true}},
   product_id: {type: Number, index: true},
   rating: Number,
   date: String,
@@ -46,9 +46,22 @@ server.get('/reviews', (req, res) => {
     product_id: Number(req.query.product_id)
   };
 
-  Reviews.find(query, (err, data) => {
-    if (err) res.status(400).send(err);
-    res.status(200).send(data);
+  let sortMethod = (req.query.sort === 'newest') ? '-date': '-helpfulness';
+
+  Reviews.find(query).select('-_id review_id rating summary recommend response body date reviewer_name helpfulness photos').sort(sortMethod).exec( (err, data) => {
+    if (err) {
+      res.status(400).send(err);
+    } else {
+      let page = req.query.page || 1;
+      let count = req.query.count || 5;
+      let formatted = {
+        product: data[0].product_id,
+        page: page,
+        count: count,
+        results: data.slice(0, Math.min(count, data.length))
+      };
+      res.status(200).send(formatted);
+    }
   })
 
 })
