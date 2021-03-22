@@ -7,6 +7,9 @@ const path = require('path');
 const PORT = 3003;
 const server = express();
 
+// require dateformat
+const dateFormat = require('dateformat');
+
 // apply middleware
 server.use(morgan('dev'));
 server.use(cors());
@@ -36,6 +39,7 @@ const reviews_schema = new mongoose.Schema({
   reviewer_email: String,
   response: String,
   helpfulness: Number,
+  photos: Array
 });
 
 const characs_schema = new mongoose.Schema({
@@ -61,7 +65,7 @@ server.get('/reviews', (req, res) => {
 
   let sortMethod = (req.query.sort === 'newest') ? '-date': '-helpfulness';
 
-  Reviews.find(query).select('-_id review_id rating summary recommend response body date reviewer_name helpfulness photos').sort(sortMethod).exec((err, data) => {
+  Reviews.find(query).select('-_id review_id rating summary recommend response body date reviewer_name helpfulness photos').where('reported').equals(false).sort(sortMethod).exec((err, data) => {
     if (err) {
       res.status(400).send(err);
     } else {
@@ -75,7 +79,7 @@ server.get('/reviews', (req, res) => {
       };
       res.status(200).send(formatted);
     }
-  })
+  });
 
 });
 
@@ -173,5 +177,77 @@ server.get('/reviews/meta', (req, res) => {
     }
   });
 
+});
+
+server.post('/reviews', (req, res) => {
+  const Reviews = mongoose.model('Reviews', reviews_schema);
+
+  Reviews.count((err, count) => {
+    const query = new Reviews({
+      review_id: count++,
+      product_id: req.body.product_id,
+      rating: req.body.rating,
+      data: dateFormat(new Date(), "yyyy-mm-dd"),
+      summary: req.body.summary,
+      body: req.body.body,
+      recommend: req.body.recommend || false,
+      reported: false,
+      reviewer_name: req.body.name,
+      reviewer_email: req.body.email,
+      helpfulness: 0,
+      photos: (Array.isArray(req.body.photos)) ? req.body.photos.map((str) => {
+        return {
+          url: str
+        }
+      }) : []
+    });
+
+    Reviews.create(query, (err) => {
+      if (err) {
+        res.status(400).send(err);
+      } else {
+        res.status(201).send('created!')
+      }
+    });
+  })
+});
+
+server.put('/reviews/:review_id/helpful', (req, res) => {
+  const Reviews = mongoose.model('Reviews', reviews_schema);
+
+  const query = {
+    review_id: req.params.review_id
+  };
+
+  Reviews.find(query).select('-_id helpfulness').exec((err, data) => {
+    if (err) {
+      res.status(400).send(err);
+    } else {
+      let currentVal = data[0].helpfulness;
+      Reviews.updateOne(query, {helpfulness: currentVal+1}, (err) => {
+        if (err) {
+          res.status(400).send(err);
+        } else {
+          res.status(204).end();
+        }
+      })
+    }
+  });
+});
+
+server.put('/reviews/:review_id/report', (req, res) => {
+  const Reviews = mongoose.model('Reviews', reviews_schema);
+
+  const query = {
+    review_id: req.params.review_id
+  };
+
+  Reviews.updateOne(query, {reported: true}, (err) => {
+    if (err) {
+      res.status(400).send(err);
+    } else {
+      res.status(204).end();
+    }
+  });
 });
 

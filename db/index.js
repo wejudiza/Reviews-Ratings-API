@@ -21,6 +21,7 @@ const reviews_schema = new mongoose.Schema({
   reviewer_email: String,
   response: String,
   helpfulness: Number,
+  photos: Array
 });
 
 const products_schema = new mongoose.Schema({

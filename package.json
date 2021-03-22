@@ -25,6 +25,7 @@
     "csv-writer": "^1.6.0",
     "data-forge": "^1.8.17",
     "dataframe-js": "^1.4.4",
+    "dateformat": "^4.5.1",
     "express": "^4.17.1",
     "fs": "0.0.1-security",
     "line-by-line": "^0.1.6",
