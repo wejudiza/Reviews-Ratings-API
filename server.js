@@ -169,7 +169,7 @@ server.get('/reviews/meta', (req, res) => {
       // have to manually set time to wait for queries hell to resolve
       setTimeout(()=>{
         res.status(200).send(result);
-      }, 20)
+      }, 50)
     }
   });
 
