@@ -24,21 +24,6 @@ const reviews_schema = new mongoose.Schema({
   photos: Array
 });
 
-const products_schema = new mongoose.Schema({
-  _id: Number,
-  ratings: {type: Object, default: {}},
-  recommended: {type: Object, default: {}},
-  characteristics: {type: Object, default: {}}
-});
-
-const ratings_schema = new mongoose.Schema({
-  1: Number,
-  2: Number,
-  3: Number,
-  4: Number,
-  5: Number
-});
-
 const characs_schema = new mongoose.Schema({
   _id: Number,
   product_id: {type: Number, index: true},
@@ -54,7 +39,6 @@ const charac_reviews_schema = new mongoose.Schema({
 
 const Reviews = mongoose.model('Reviews', reviews_schema);
 const Reviews_photos = mongoose.model('Reviews_photos', reviews_photos);
-const Products = mongoose.model('Products', products_schema);
 const Characs = mongoose.model('Characs', characs_schema);
 const Charac_reviews = mongoose.model('Charac_reviews', charac_reviews_schema);
 

@@ -103,7 +103,6 @@ server.get('/reviews/meta', (req, res) => {
       let result = {
         product_id: req.query.product_id,
         ratings: {
-          0: 0,
           1: 0,
           2: 0,
           3: 0,
