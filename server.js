@@ -69,7 +69,7 @@ server.get('/reviews/meta', (req, res) => {
     if (err) {
       res.status(400).send(err);
     } else {
-      console.log(data)
+      // console.log(data)
       let result = {
         product_id: req.query.product_id,
         rating: data[0].rating,
