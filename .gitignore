@@ -108,3 +108,6 @@ dist
 
 # data
 *.csv
+
+# newrelic
+newrelic.js
