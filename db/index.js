@@ -2,46 +2,11 @@ const mongoose = require('mongoose');
 const LineInputStream = require('line-input-stream');
 const fs = require('fs');
 const path = require('path');
+const model = require('./model.js');
 
-const reviews_photos = new mongoose.Schema({
-  id: {type: Number, index: {unique: true}},
-  url: String
-}, {_id: false});
-
-const reviews_schema = new mongoose.Schema({
-  review_id: {type: Number, index: {unique: true}},
-  product_id: {type: Number, index: true},
-  rating: Number,
-  date: String,
-  summary: String,
-  body: String,
-  recommend: Boolean,
-  reported: Boolean,
-  reviewer_name: String,
-  reviewer_email: String,
-  response: String,
-  helpfulness: Number,
-  photos: Array
-});
-
-const characs_schema = new mongoose.Schema({
-  _id: Number,
-  product_id: {type: Number, index: true},
-  name: String
-});
-
-const charac_reviews_schema = new mongoose.Schema({
-  _id: Number,
-  characteristic_id: {type: Number, index: true},
-  review_id: Number,
-  value: Number
-});
-
-const Reviews = mongoose.model('Reviews', reviews_schema);
-const Reviews_photos = mongoose.model('Reviews_photos', reviews_photos);
-const Characs = mongoose.model('Characs', characs_schema);
-const Charac_reviews = mongoose.model('Charac_reviews', charac_reviews_schema);
-
+const Reviews = model.Reviews;
+const Reviews_photos = model.Reviews_photos;
+const Characs = model.Characs;
 
 // open a connection
 mongoose.connect('mongodb://localhost/reviews_ratings', {useNewUrlParser: true, useUnifiedTopology: true});
@@ -54,7 +19,7 @@ db.once('open', (err, conn) => {
   console.log('connected to mongoDB!');
 
   // function to seed reviews collection with data
-
+  // for reviews collection:
   const importDataForReviews = () => {
 
     const seedReviewsCollection = () => {
@@ -194,13 +159,14 @@ db.once('open', (err, conn) => {
     });
   };
 
+  // for characs collections:
   const importDataForCharacCSV = () => {
 
     const seedCharacCollection = () => {
       const stream = LineInputStream(fs.createReadStream(path.join(__dirname, './data/characteristics.csv'), {start: 19}));
       // stream.setDelimiter("\n");
       // lower level method, needs connection
-      var bulk = Characs.collection.initializeOrderedBulkOp();
+      var bulk = Characs.collection.initializeUnorderedBulkOp();
       var counter = 0;
       var batch = 0;
 
@@ -213,7 +179,11 @@ db.once('open', (err, conn) => {
         var obj = new Characs({
           _id: row[0],
           product_id: row[1],
-          name: JSON.parse(row[2])
+          name: JSON.parse(row[2]),
+          totalValue: 0,
+          totalReview: 0,
+          recommended: 0,
+          rating: {}
         });
 
         bulk.insert(obj);  // Bulk is okay if you don't need schema
@@ -229,7 +199,7 @@ db.once('open', (err, conn) => {
               // possibly do something with result
               batch++;
               console.log(`${batch * 1000} characteristics entries finished, continuing...`)
-              bulk = Characs.collection.initializeOrderedBulkOp();
+              bulk = Characs.collection.initializeUnorderedBulkOp();
 
               stream.resume(); //continue to read from file
           });
@@ -242,7 +212,7 @@ db.once('open', (err, conn) => {
             bulk.execute(function(err,result) {
                 if (err) null;   // or something
                 // maybe look at result
-                console.log(`seeding done for ${counter} characteristics!`)
+                console.log(`seeding done for ${counter} characteristics!`);
             });
         }
       });
@@ -279,7 +249,7 @@ db.once('open', (err, conn) => {
       const stream = LineInputStream(fs.createReadStream(path.join(__dirname, './data/characteristic_reviews.csv'), {start: 37}));
       // stream.setDelimiter("\n");
       // lower level method, needs connection
-      var bulk = Charac_reviews.collection.initializeOrderedBulkOp();
+      var bulk = Characs.collection.initializeUnorderedBulkOp();
       var counter = 0;
       var batch = 0;
 
@@ -289,15 +259,12 @@ db.once('open', (err, conn) => {
 
       stream.on("line",function(line) {
         var row = line.split(",");     // split the lines on delimiter
-        var obj = new Charac_reviews({
-          _id: row[0],
-          characteristic_id: row[1],
-          review_id: row[2],
-          value: row[3]
-        });
 
-        bulk.insert(obj);  // Bulk is okay if you don't need schema
-                            // defaults. Or can just set them.
+        bulk.find( { _id: Number(row[1]) }).upsert().updateOne( { $inc: { totalValue: Number(row[3]) } });
+        bulk.find( { _id: Number(row[1]) }).upsert().updateOne( { $inc: { totalReview: 1 } });
+
+        // bulk.insert(obj);  // Bulk is okay if you don't need schema
+        //                     // defaults. Or can just set them.
 
         counter++;
 
@@ -309,7 +276,7 @@ db.once('open', (err, conn) => {
               // possibly do something with result
               batch++;
               console.log(`${batch * 1000} characteristic_reviews entries finished, continuing...`)
-              bulk = Charac_reviews.collection.initializeOrderedBulkOp();
+              bulk = Characs.collection.initializeUnorderedBulkOp();
 
               stream.resume(); //continue to read from file
           });
@@ -353,15 +320,60 @@ db.once('open', (err, conn) => {
 
   };
 
+  const importRatingRecFromReviews = () => {
+    const stream = LineInputStream(fs.createReadStream(path.join(__dirname, './data/reviews.csv'), {start: 108}));
+    // lower level method, needs connection
+    var bulk = Characs.collection.initializeUnorderedBulkOp();
+    var counter = 0;
+    var batch = 0;
 
+    stream.on("error",function(err) {
+      console.log(err); // or otherwise deal with it
+    });
 
+    stream.on("line",function(line) {
+      var row = line.split(",");     // split the lines on delimiter
+
+      if (row[6] === "true" || row[6] === 1) {
+        bulk.find( { product_id: Number(row[1]) }).upsert().update( { $inc: { recommended: 1 } });
+      }
+
+      bulk.find( { product_id: Number(row[1]) }).upsert().update( { $inc: { [`rating.${Number(row[2])}`]: 1 } });
+
+      counter++;
+
+      if ( counter % 1000 === 0 ) {
+        stream.pause(); //lets stop reading from file until we finish writing this batch to db
+
+        bulk.execute(function(err,result) {
+          if (err) null;   // or do something
+          // possibly do something with result
+          batch++;
+          console.log(`${batch * 1000} rating and recommended entries finished, continuing...`);
+          bulk = Characs.collection.initializeUnorderedBulkOp();
+
+          stream.resume(); //continue to read from file
+        });
+      }
+    });
+
+    stream.on("end",function() {
+      if ( counter % 1000 != 0 ) {
+          bulk.execute(function(err,result) {
+            if (err) null;   // or something
+            // maybe look at result
+            console.log(`seeding done for ${counter} entries of rating and recommended!`);
+          });
+      }
+    });
+  };
 
   // seed collections
-
-  // working functions:
   // importDataForReviews();
   // importDataForReviewsPhotos();
+
   // importDataForCharacCSV();
-  importDataForCharac_reviews();
+  // importDataForCharac_reviews();
+  importRatingRecFromReviews();
 });
 
