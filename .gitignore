@@ -111,3 +111,6 @@ dist
 
 # newrelic
 newrelic.js
+
+# pem key for aws
+*.pem
