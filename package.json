@@ -4,8 +4,12 @@
   "description": "api services for reviews&ratings",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon -w server.js",
-    "seed": "node --max-old-space-size=4096 db/index.js",
+    "start": "node server.js",
+    "build": "nodemon -w server.js",
+    "seedReviews": "node --max-old-space-size=4096 db/seedReviewsCollection.js",
+    "seedCharacs": "node --max-old-space-size=4096 db/seedCharacsBase.js",
+    "seedNameValue": "node --max-old-space-size=4096 db/seedNameValue.js",
+    "seedRatingRec": "node --max-old-space-size=4096 db/seedRatingRec.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,14 +25,9 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
-    "csv-parse": "^4.15.3",
-    "csv-writer": "^1.6.0",
-    "data-forge": "^1.8.17",
-    "dataframe-js": "^1.4.4",
     "dateformat": "^4.5.1",
     "express": "^4.17.1",
     "fs": "0.0.1-security",
-    "line-by-line": "^0.1.6",
     "line-input-stream": "^1.0.1",
     "mongoose": "^5.12.0",
     "morgan": "^1.10.0",

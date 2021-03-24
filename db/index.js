@@ -369,11 +369,11 @@ db.once('open', (err, conn) => {
   };
 
   // seed collections
-  // importDataForReviews();
-  // importDataForReviewsPhotos();
+  importDataForReviews();
+  importDataForReviewsPhotos();
 
-  // importDataForCharacCSV();
-  // importDataForCharac_reviews();
+  importDataForCharacCSV();
+  importDataForCharac_reviews();
   importRatingRecFromReviews();
 });
 
