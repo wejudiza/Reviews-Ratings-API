@@ -1,0 +1,1 @@
+ssh -i "mongotestpem.pem" ubuntu@ec2-54-183-183-221.us-west-1.compute.amazonaws.com

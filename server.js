@@ -29,6 +29,14 @@ server.listen(PORT, () => {
 // connect to mongoDB
 mongoose.connect(`mongodb://${address}/reviews_ratings`, {useNewUrlParser: true, useUnifiedTopology: true});
 
+const db = mongoose.connection;
+
+db.on('error', console.error.bind(console, 'connection error:'));
+
+db.once('open', (err, conn) => {
+  console.log(`connected to mongoDB@${address}!`);
+});
+
 const Reviews = model.Reviews;
 const Reviews_photos = model.Reviews_photos;
 const Characs = model.Characs;
