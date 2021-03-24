@@ -3,20 +3,21 @@ const LineInputStream = require('line-input-stream');
 const fs = require('fs');
 const path = require('path');
 const model = require('./model.js');
+const address = require('./ip.js');
 
 const Reviews = model.Reviews;
 const Reviews_photos = model.Reviews_photos;
 const Characs = model.Characs;
 
 // open a connection
-mongoose.connect('mongodb://localhost/reviews_ratings', {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect(`mongodb://${address}/reviews_ratings`, {useNewUrlParser: true, useUnifiedTopology: true});
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
 
 db.once('open', (err, conn) => {
-  console.log('connected to mongoDB!');
+  console.log(`connected to mongoDB@${address}!`);
 
   // function to seed reviews collection with data
 

@@ -8,6 +8,7 @@ const path = require('path');
 const PORT = 3003;
 const server = express();
 const model = require('./db/model.js');
+const address = require('./db/ip.js');
 
 // require dateformat
 const dateFormat = require('dateformat');
@@ -26,7 +27,7 @@ server.listen(PORT, () => {
 })
 
 // connect to mongoDB
-mongoose.connect('mongodb://localhost/reviews_ratings', {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect(`mongodb://${address}/reviews_ratings`, {useNewUrlParser: true, useUnifiedTopology: true});
 
 const Reviews = model.Reviews;
 const Reviews_photos = model.Reviews_photos;
