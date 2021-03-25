@@ -53,6 +53,7 @@ server.get('/reviews', (req, res) => {
     if (err) {
       res.status(400).send(err);
     } else {
+      // console.log(data)
       let page = req.query.page || 1;
       let count = req.query.count || 5;
       let formatted = {
