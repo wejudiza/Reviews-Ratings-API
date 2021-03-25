@@ -114,3 +114,4 @@ newrelic.js
 
 # pem key for aws
 *.pem
+*.sh

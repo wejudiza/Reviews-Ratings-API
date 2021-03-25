@@ -1,3 +1,8 @@
 node_modules
 npm-debug.log
 db/data
+k6_stresstest_script.js
+*.sh
+*.pem
+*.log
+newrelic.js
