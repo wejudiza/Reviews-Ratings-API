@@ -1,1 +1,1 @@
-module.exports = "localhost";
+module.exports = "dirk:password@54.183.183.221";

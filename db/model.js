@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const reviews_photos = new mongoose.Schema({
-  id: {type: Number, index: {unique: true}},
+  id: {type: Number, index: true},
   url: String
 }, {_id: false});
 
